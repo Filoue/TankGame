@@ -36,10 +36,6 @@ public class towerAI : MonoBehaviour
                 _player = joueur.transform;
             }
         }
-
-        Ypos = Mathf.Clamp(_turret.position.y, MinAngle, MaxAngle);
-        Xpos = Mathf.Clamp(_turret.position.x, MinAngle, MaxAngle);
-        Zpos = Mathf.Clamp(_turret.position.z, MinAngle, MaxAngle);
         
         float distance = Vector3.Distance(_turret.position, _player.position);
         if (distance <= _maxDistance)
