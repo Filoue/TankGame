@@ -2,7 +2,10 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float _speed = 1000f;
+    [SerializeField] private float _speed = 1000f;
+    [SerializeField] private float _dps = 50f;
+    
+    [SerializeField] private ParticleSystem _impact;
     
     Rigidbody _rb;
     
@@ -20,8 +23,18 @@ public class Bullet : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Destroy(gameObject);
+        OnTouch(collision.gameObject); 
         Debug.Log(collision.gameObject.name);
+    }
+
+    private void OnTouch(GameObject other)
+    {
+        if (other.TryGetComponent(out DamageTaker damageTaker))
+        {
+            damageTaker.TakeDamage(_dps * Time.deltaTime);
+        }
+        Instantiate(_impact, transform.position, transform.rotation);
+        Destroy(gameObject);
     }
 
 

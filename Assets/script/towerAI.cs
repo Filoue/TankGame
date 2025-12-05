@@ -1,59 +1,118 @@
+using System.Collections;
 using UnityEngine;
 
 public class towerAI : MonoBehaviour
 {
-    [SerializeField] Transform _turret;
-    [SerializeField] Transform _player;
-    
-    [SerializeField] GameObject _ammoPrefab;
 
-    [SerializeField] float MaxAngle;
-    [SerializeField] float MinAngle;
-    [SerializeField] float _turretSpeed = 20f;
-    [SerializeField] float _maxDistance = 15f;
-    [SerializeField] float _betweenShots = 5f;
-    [SerializeField] float _nextTimeToFire;
-    
-    private Time _time;
-    private float Ypos;
-    private float Xpos;
-    private float Zpos;
-    
-    
-    // Update is called once per frame
-    void Update()
+    [SerializeField] private float _detectionRange;
+    [SerializeField] private float _fireTime;
+    [SerializeField] private float _waitTime;
+    [SerializeField] private float _dps;
+    [SerializeField] private Transform _playerPosition;
+    [SerializeField] private Transform _barrel;
+    [SerializeField] private float _lerpCompensation;
+    [SerializeField] private ParticleSystem _shoot;
+
+    [SerializeField] private LayerMask _layers;
+
+    private bool _playerDetected = false;
+    private bool _doShoot = false;
+    private AudioSource _audio;
+
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
     {
-        if (_player == null)
+        _audio = GetComponent<AudioSource>();
+        if(!_playerPosition)
         {
-            // Tente de trouver le joueur s'il n'est pas assigné dans l'Inspector
-            GameObject joueur = GameObject.FindWithTag("Player");
-            if (joueur != null)
-            {
-                if (Time.time <= _nextTimeToFire)
-                {
-                    
-                }
-                _player = joueur.transform;
-            }
-        }
-        
-        float distance = Vector3.Distance(_turret.position, _player.position);
-        if (distance <= _maxDistance)
-        {
-            FollowTarget();
-            
+            _playerPosition = GameObject.FindWithTag("Tank").transform;
         }
     }
 
-    private void FollowTarget()
+    // Update is called once per frame
+    void Update()
     {
-        Vector3 directionToTarget = new Vector3(_player.position.x - Xpos, _player.position.y, _player.position.z);
+        //_barrel.LookAt(_playerPosition);
         
-        Quaternion rotationDesiree = Quaternion.LookRotation(directionToTarget);
         
-        _turret.rotation = Quaternion.Slerp(
-            _turret.rotation,
-            rotationDesiree,
-            _turretSpeed * Time.deltaTime);
+        if(_playerPosition != null)
+        {
+            Vector3 playerDirection = _playerPosition.position - _barrel.position;
+            if (playerDirection.magnitude < _detectionRange)
+            {
+                if (_playerDetected == false)
+                {
+                    StartCoroutine(ShootSequence_co());
+                    _playerDetected = true;
+                }
+                _barrel.rotation = Quaternion.Lerp(_barrel.rotation,
+                    Quaternion.LookRotation(playerDirection),
+                    _lerpCompensation * Time.deltaTime);
+            }
+            else
+            {
+                StopAllCoroutines();
+                _playerDetected = false;
+                _barrel.rotation = Quaternion.Lerp(_barrel.rotation,
+                    Quaternion.LookRotation(Vector3.forward),
+                    _lerpCompensation * Time.deltaTime);
+            }
+
+        }
+        else
+        {
+            StopAllCoroutines();
+        }
+        
+        if (_doShoot) DoLaserShoot();
+        
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(_barrel.position, _detectionRange);
+    }
+
+    private void DoLaserShoot()
+    {
+        if (Physics.Raycast(_barrel.position, _barrel.forward, out RaycastHit hit, Mathf.Infinity, _layers))
+        {
+            Debug.Log("Hit something !!!! " + hit.collider.gameObject.name);
+            // if(hit.collider.CompareTag("Tank"))
+            
+            if(hit.collider.gameObject.TryGetComponent(out DamageTaker damageTaker))
+            {
+                
+                damageTaker.TakeDamage(_dps * Time.deltaTime);
+                Debug.DrawRay(_barrel.position, _barrel.forward * 100, Color.green, 0.25f);
+            }
+            _shoot.Play();
+            
+            
+                
+        }
+        else
+        {
+            Debug.DrawRay(_barrel.position, _barrel.forward * 100, Color.red, 0.25f);
+        }
+
+    }
+
+    private IEnumerator ShootSequence_co()
+    {
+        do
+        {
+            _doShoot = true;
+            _audio.Play();
+            
+            yield return new WaitForSeconds(_fireTime);
+            
+            _doShoot = false;
+            _audio.Stop();
+            yield return new WaitForSeconds(_waitTime);
+            
+        } while (true);
+
     }
 }

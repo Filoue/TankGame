@@ -152,3 +152,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 55
+  _dps: 50
+  _impact: {fileID: 793126240222541350, guid: 66f0bfb4dc2c1b344858022c18643b75, type: 3}

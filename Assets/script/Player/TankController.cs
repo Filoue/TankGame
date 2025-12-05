@@ -5,18 +5,19 @@ using UnityEngine.InputSystem;
 
 public class TankController : MonoBehaviour
 {
-    public Transform _turret;
-    public Transform _canon;
-    public Transform _canon2;
+    [SerializeField] private Transform _turret;
+    [SerializeField] private Transform _canon;
+    [SerializeField] private Transform _canon2;
     
-    public GameObject _ammoPrefab;
+    [SerializeField] private GameObject _ammoPrefab;
     
-    public float _moveSpeed = 5f;
-    public float _turnSpeed = 5f;
-    public float _turretSpeed = 10f;
-    public float _canonSpeed = 10f;
+    [SerializeField] private float _moveSpeed = 5f;
+    [SerializeField] private float _turnSpeed = 5f;
+    [SerializeField] private float _turretSpeed = 10f;
+    [SerializeField] private float _canonSpeed = 10f;
+    [SerializeField] private AudioSource _audio;
     
-    Gamepad _gamepad;
+    [SerializeField] private ParticleSystem _flash;
     
     private List<GameObject> _ammo;
     
@@ -27,16 +28,17 @@ public class TankController : MonoBehaviour
     private float _moveInput;
     private float _turnInput;
     private float _canonInput;
+    private Animator _animator;
     
     private float _attackInput;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        _animator = GetComponent<Animator>();
         _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.freezeRotation = true;
         
-        _gamepad = Gamepad.current;
     }
 
     // Update is called once per frame
@@ -56,11 +58,10 @@ public class TankController : MonoBehaviour
         _rigidbody.linearVelocity = new Vector3(velocity.x, _rigidbody.linearVelocity.y, velocity.z);
         //_rigidbody.angularVelocity = _turnInput * Mathf.Deg2Rad  * _turnSpeed * transform.up;
         transform.Rotate(Vector3.up * _turnInput * _turnSpeed * Time.deltaTime);
-        
         // Rotating the turret
         _turret.Rotate(new Vector3(0,_turretInput * _turretSpeed * Time.deltaTime, 0));
         _canon2.Rotate(Vector3.left * _canonInput * _canonSpeed * Time.deltaTime);
- 
+        _animator.SetFloat("Speed", _rigidbody.linearVelocity.magnitude);
     }
 
     public void OnMove(InputAction.CallbackContext ctx)
@@ -88,7 +89,13 @@ public class TankController : MonoBehaviour
 
     public void OnAttack(InputAction.CallbackContext ctx)
     {
-        Instantiate(_ammoPrefab, _canon.position, _canon.rotation);
+        if (ctx.performed)
+        {
+            Instantiate(_ammoPrefab, _canon.position, _canon.rotation);
+            _flash.Play();
+            _audio.Play();
+            
+        }
     }
     
 

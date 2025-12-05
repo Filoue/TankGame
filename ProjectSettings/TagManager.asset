@@ -8,11 +8,12 @@ TagManager:
   - Bullet
   - Tree
   - Box
+  - DeathZone
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Tank
   - Water
   - UI
   - 
