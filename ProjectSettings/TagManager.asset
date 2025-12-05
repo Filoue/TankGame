@@ -9,6 +9,8 @@ TagManager:
   - Tree
   - Box
   - DeathZone
+  - Cap
+  - boxx
   layers:
   - Default
   - TransparentFX

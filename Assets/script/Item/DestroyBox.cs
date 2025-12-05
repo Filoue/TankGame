@@ -3,13 +3,24 @@ using UnityEngine;
 
 public class DestroyBox : MonoBehaviour
 {
-    [SerializeField] private float _capForce, _boxForce;
+    [SerializeField] private float _capForce = 100, _boxForce = 100;
     
-    [SerializeField] private Rigidbody _caprb;
-    [SerializeField] private Rigidbody _boxrb;
+    private Rigidbody _caprb;
+    private Rigidbody _boxrb;
     
     public Action<DestroyBox> OnBoxDestroyed;
-    
+
+    void Start()
+    {
+        if (transform.childCount > 0)
+        {
+            // Récupère le premier enfant (index 0)
+            Transform childTransform = transform.GetChild(1);
+            _caprb = childTransform.GetComponent<Rigidbody>();
+            childTransform = transform.GetChild(0);
+            _boxrb = childTransform.GetComponent<Rigidbody>();
+        }
+    }
 
 
     void OnTriggerEnter(Collider other)
